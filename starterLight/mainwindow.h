@@ -46,7 +46,6 @@ public:
     void resetAllColorsAndThickness(MyMesh *_mesh);
     bool containPoints(MyMesh *_mesh);
     bool containTriangles(MyMesh *_mesh);
-    int aled();
 
 private slots:
 

@@ -128,7 +128,7 @@ bool containTriangles(MyMesh *_mesh)
 bool containPoints(MyMesh *_mesh)
 {
     unsigned int numberPointsOnFaces = 0;
-    bool hasOnlySinglePoint = true;
+    bool hasSinglePoints = true;
 
     for (MyMesh::FaceIter fit = _mesh->faces_begin(); fit != _mesh->faces_end(); fit++)
     {
@@ -139,18 +139,12 @@ bool containPoints(MyMesh *_mesh)
     }
 
     if(numberPointsOnFaces != _mesh->n_vertices())
-        hasOnlySinglePoint = false;
+        hasSinglePoints = false;
 
     qDebug() << "nombre de point sur les faces :" << numberPointsOnFaces;
     qDebug() << "nombre de points total sur le mesh:"<< _mesh->n_vertices();
 
-    return hasOnlySinglePoint;
-}
-
-int aled ()
-{
-    int a=5;
-    return a;
+    return hasSinglePoints;
 }
 
 /*
@@ -560,8 +554,54 @@ void MainWindow::on_triangleSurface_proportion_clicked()
 void MainWindow::on_meshIsValid_clicked()
 {
     bool a,b;
-    int c;
     //a = containPoints(&mesh);
     //b = containTriangles(&mesh);
-    c= aled();
+    //appel de au fonction précédent non fonctionnel
+
+    // partie a mettre dans fonction containPoints()
+    unsigned int numberNeighborsPoint;
+    bool hasSinglePoints = false;
+
+    for(MyMesh::VertexIter vit = mesh.vertices_begin(); vit != mesh.vertices_end(); vit ++)
+    {
+        VertexHandle vh = *vit;
+        numberNeighborsPoint=0;
+        for (MyMesh::VertexVertexIter curentVertex = mesh.vv_iter(vh); curentVertex.is_valid(); curentVertex ++)
+        {
+            numberNeighborsPoint ++;
+        }
+        if(numberNeighborsPoint==0)
+        {
+            hasSinglePoints = true;
+        }
+
+    }
+
+
+    //========== partie a mettre dans fonction containTriangle()==============
+
+    int counter = 0;
+    bool hasTriangle = false;
+
+    for (MyMesh::FaceIter fit = mesh.faces_begin(); fit != mesh.faces_end(); fit++)
+    {
+        counter = 0;
+        for(MyMesh::VertexIter vit = mesh.vertices_begin(); vit != mesh.vertices_end(); vit ++)
+        {
+            counter ++;
+        }
+        if(counter == 3)
+        {
+            hasTriangle = true;
+
+            break;
+        }
+    }
+
+    //==========================
+
+    if(hasTriangle && hasSinglePoints)
+        qDebug()<<"Mesh ayant des points isolé et également des faces triangulaire";
+    else
+        qDebug()<<"Maillage conforme";
 }
