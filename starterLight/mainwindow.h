@@ -43,15 +43,17 @@ public:
     float get_max_area(MyMesh *_mesh);
     float compute_face_area(MyMesh *_mesh, int n_face);
     void displayMesh(MyMesh *_mesh);
-    void resetAllColorsAndThickness(MyMesh* _mesh);
+    void resetAllColorsAndThickness(MyMesh *_mesh);
+    bool containPoints(MyMesh *_mesh);
+    bool containTriangles(MyMesh *_mesh);
+    int aled();
 
 private slots:
+
 
     void on_pushButton_chargement_clicked();
 
     void on_pushButton_barycentre_clicked();
-
-    void on_numberVertices_overflow();
 
     void on_getInformation_clicked();
 
@@ -60,6 +62,8 @@ private slots:
     void on_pushButton_area_clicked();
 
     void on_triangleSurface_proportion_clicked();
+
+    void on_meshIsValid_clicked();
 
 private:
 

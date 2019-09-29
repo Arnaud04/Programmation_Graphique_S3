@@ -28,7 +28,7 @@ void MainWindow::on_pushButton_chargement_clicked()
 float MainWindow::compute_area(MyMesh *_mesh)
 {
     float area = 0.0;
-    for(int i=0;i<_mesh->n_faces();i++)
+    for(unsigned int i=0;i<_mesh->n_faces();i++)
     {
         area += compute_face_area(_mesh , i);
     }
@@ -39,7 +39,7 @@ float MainWindow::compute_area(MyMesh *_mesh)
 float MainWindow::get_min_area(MyMesh *_mesh)
 {
     float min = compute_face_area(_mesh,0);
-    for(int i=0;i<_mesh->n_faces();i++)
+    for(unsigned int i=0;i<_mesh->n_faces();i++)
     {
         if(min > compute_face_area(_mesh , i))
             min = compute_face_area(_mesh , i);
@@ -52,7 +52,7 @@ float MainWindow::get_min_area(MyMesh *_mesh)
 float MainWindow::get_max_area(MyMesh *_mesh)
 {
     float max = compute_face_area(_mesh,0);
-    for(int i=0;i>_mesh->n_faces();i++)
+    for(unsigned int i=0;i>_mesh->n_faces();i++)
     {
         if(max > compute_face_area(_mesh , i))
             max = compute_face_area(_mesh , i);
@@ -63,7 +63,7 @@ float MainWindow::get_max_area(MyMesh *_mesh)
 
 /*
  * retourne l'air d'une face triangulaire passé en paramètre
- * les paramètres de la fonction sont :
+ * Ses paramètres sont :
  *      - le maillage chargé
  *      - La face dont on veut l'air
 */
@@ -102,6 +102,55 @@ float MainWindow::compute_face_area(MyMesh *_mesh, int n_face)
     area = 0.5*sqrt(produitVect[0]*produitVect[0]+produitVect[1]*produitVect[1]+produitVect[2]*produitVect[2]);
 
     return area;
+}
+
+bool containTriangles(MyMesh *_mesh)
+{
+    int counter = 0;
+    bool hasTriangle = false;
+
+    for (MyMesh::FaceIter fit = _mesh->faces_begin(); fit != _mesh->faces_end(); fit++)
+    {
+        counter = 0;
+        for(MyMesh::VertexIter vit = _mesh->vertices_begin(); vit != _mesh->vertices_end(); vit ++)
+        {
+            counter ++;
+        }
+        if(counter == 3)
+        {
+            hasTriangle = true;
+            break;
+        }
+    }
+    return hasTriangle;
+}
+
+bool containPoints(MyMesh *_mesh)
+{
+    unsigned int numberPointsOnFaces = 0;
+    bool hasOnlySinglePoint = true;
+
+    for (MyMesh::FaceIter fit = _mesh->faces_begin(); fit != _mesh->faces_end(); fit++)
+    {
+        for(MyMesh::VertexIter vit = _mesh->vertices_begin(); vit != _mesh->vertices_end(); vit ++)
+        {
+            numberPointsOnFaces ++;
+        }
+    }
+
+    if(numberPointsOnFaces != _mesh->n_vertices())
+        hasOnlySinglePoint = false;
+
+    qDebug() << "nombre de point sur les faces :" << numberPointsOnFaces;
+    qDebug() << "nombre de points total sur le mesh:"<< _mesh->n_vertices();
+
+    return hasOnlySinglePoint;
+}
+
+int aled ()
+{
+    int a=5;
+    return a;
 }
 
 /*
@@ -234,6 +283,7 @@ void MainWindow::displayMesh(MyMesh* _mesh)
             vertsIDbyThickness[t].append((*vit).idx());
         }
     }
+
     QHashIterator<float, QList<int> > vitt(vertsIDbyThickness);
     QList<QPair<float, int> > vertsSizes;
 
@@ -479,8 +529,6 @@ void MainWindow::on_pushButton_area_clicked()
 void MainWindow::on_triangleSurface_proportion_clicked()
 {
 
-    float minMesh_area = get_min_area(&mesh);
-    float maxMesh_area = get_max_area(&mesh);
     float fullMesh_area = compute_area(&mesh);
     std::vector<float> areaRepartition(10);
 
@@ -507,4 +555,13 @@ void MainWindow::on_triangleSurface_proportion_clicked()
         qDebug()<< ((float)areaRepartition[i]*100.0)/(float)mesh.n_faces() <<"% de triangle \n";
     }
 
+}
+
+void MainWindow::on_meshIsValid_clicked()
+{
+    bool a,b;
+    int c;
+    //a = containPoints(&mesh);
+    //b = containTriangles(&mesh);
+    c= aled();
 }
