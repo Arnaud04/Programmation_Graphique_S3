@@ -80,6 +80,13 @@
         </widget>
        </item>
        <item>
+        <widget class="QPushButton" name="triangleSurface_proportion">
+         <property name="text">
+          <string>Repartition Surfacique des triangle</string>
+         </property>
+        </widget>
+       </item>
+       <item>
         <layout class="QVBoxLayout" name="verticalLayout_7">
          <item>
           <widget class="QPushButton" name="getInformation">

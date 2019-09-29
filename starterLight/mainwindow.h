@@ -59,6 +59,8 @@ private slots:
 
     void on_pushButton_area_clicked();
 
+    void on_triangleSurface_proportion_clicked();
+
 private:
 
     bool modevoisinage;

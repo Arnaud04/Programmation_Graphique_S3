@@ -313,13 +313,16 @@ void MainWindow::on_pushButton_barycentre_clicked()
         qDebug() << "z " <<mesh.point(vh)[2] << " ";*/
     }
 
-    float barycenter_x=0.0; float barycenter_y=0.0;float barycenter_z=0.0;
-    barycenter_x = x/(mesh.n_faces());
-    barycenter_y = y/(mesh.n_faces());
-    barycenter_z = z/(mesh.n_faces());
+            float barycenter_x=0.0; float barycenter_y=0.0;float barycenter_z=0.0;
+    if((x && y && z) != 0)
+    {
+        barycenter_x = x/(mesh.n_faces());
+        barycenter_y = y/(mesh.n_faces());
+        barycenter_z = z/(mesh.n_faces());
+        qDebug()<<"coordonnées barycentriques : x= "<< barycenter_x << "y= " << barycenter_y << "z= " << barycenter_z;
+    }
 
 
-    qDebug()<<"coordonnées barycentriques : x= "<< barycenter_x << "y= " << barycenter_y << "z= " << barycenter_z;
 
 }
 
@@ -472,3 +475,36 @@ void MainWindow::on_pushButton_area_clicked()
 }
 
 
+
+void MainWindow::on_triangleSurface_proportion_clicked()
+{
+
+    float minMesh_area = get_min_area(&mesh);
+    float maxMesh_area = get_max_area(&mesh);
+    float fullMesh_area = compute_area(&mesh);
+    std::vector<float> areaRepartition(10);
+
+    for(MyMesh::FaceIter f = mesh.faces_begin(); f != mesh.faces_end(); f++)
+    {
+        FaceHandle fh = *f;
+
+        float fh_area = compute_face_area(&mesh, fh.idx());
+        float areaFrequency = fullMesh_area/10.0;
+
+
+        for(int i=0;i<10;i++)
+        {
+            if((fh_area > areaFrequency*i)&&(fh_area <= areaFrequency*(i+1)))
+                areaRepartition[i] = areaRepartition[i]+1;
+        }
+
+
+    }
+
+    for(int i=0; i<10;i++)
+    {
+        qDebug()<< areaRepartition[i] << "face(s) on une taille compris entre"<< i*10 << "% et" <<(i+1)*10 <<"% de la surface total du mesh";
+        qDebug()<< ((float)areaRepartition[i]*100.0)/(float)mesh.n_faces() <<"% de triangle \n";
+    }
+
+}
