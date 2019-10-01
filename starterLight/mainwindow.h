@@ -47,7 +47,11 @@ public:
     bool containIsolated_points();
     MyMesh::Point getBarycenterFromFace(VertexHandle vh ,FaceHandle fh,MyMesh* _mesh);
     //MyMesh::Point getNormalFace (MyMesh* _mesh,VertexHandle vertexFromFace, float barycentre);
-    std::vector<MyMesh::Point> getNormalFace (MyMesh* _mesh,VertexHandle vertexFromFace, float barycentre);
+    MyMesh::Point getNormalFace (MyMesh* _mesh,VertexHandle v1, VertexHandle v2);
+    MyMesh::Point getNormalPoint (MyMesh* _mesh,VertexHandle vertexFromFace);
+    void normals_points(MyMesh * _mesh);
+    float angle_vector(MyMesh::Point v1, MyMesh::Point v2);
+    void angles_normal_points(MyMesh * _mesh);
     void test();
 
 private slots:
@@ -66,6 +70,8 @@ private slots:
     void on_triangleSurface_proportion_clicked();
 
     void on_meshIsValid_clicked();
+
+    void on_show_pts_norm_clicked();
 
 private:
 

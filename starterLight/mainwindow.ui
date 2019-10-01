@@ -96,6 +96,13 @@
        <item>
         <layout class="QVBoxLayout" name="verticalLayout_7">
          <item>
+          <widget class="QPushButton" name="show_pts_norm">
+           <property name="text">
+            <string>voir normales points</string>
+           </property>
+          </widget>
+         </item>
+         <item>
           <widget class="QPushButton" name="getInformation">
            <property name="text">
             <string>calcul nombre d'element</string>
