@@ -129,7 +129,7 @@ std::vector<VertexHandle> getNormalFace (MyMesh* _mesh,VertexHandle v1, VertexHa
             VertexHandle v = *curVertex;
             listePoints.append(v);
         }
-        //parmis ces points ceux qui appartiennent à la faceID
+        //parmis ces points ceux qui appbuild-starterLight-Desktop_Qt_5_13_0_GCC_64bit-Debugartiennent à la faceID
 
         for(MyMesh::FaceVertexIter curVertex = _mesh->fv_iter(fh); curVertex.is_valid(); curVertex ++)
         {
@@ -178,8 +178,7 @@ std::vector<VertexHandle> getNormalFace (MyMesh* _mesh,VertexHandle v1, VertexHa
 
     //===========================================
 
-    */
-    return normal;
+    //return normal;
 
 }
 
@@ -636,11 +635,19 @@ bool MainWindow::containIsolated_points()
 }
 
 
-
-
 void MainWindow::on_meshIsValid_clicked()
 {
-    bool a,b;
+    qDebug() << "/****** " << __FUNCTION__ << " ******/";
+    if (!checkOnlyPoint(&mesh)) {
+            qDebug() << "All faces are triangular [" << checkAllTriangularFace(&mesh) << "]";
+            qDebug() << "All faces/points/edges had a neightbors [" << checkGlobalNeighbours(&mesh) << "]";
+    }
+    else {
+        qDebug() << "Only points present in this mesh";
+    }
+
+    //******* OLD ******//
+    /*bool a,b;
     test();
     //a = containPoints(&mesh);
     //b = containTriangles(&mesh);
@@ -670,10 +677,16 @@ void MainWindow::on_meshIsValid_clicked()
 
     int counter = 0;
     bool hasTriangle = false;
-
+create new branch
     for (MyMesh::FaceIter fit = mesh.faces_begin(); fit != mesh.faces_end(); fit++)
     {
-        counter = 0;
+        counter = bool MainWindow::checkGlobalNeighbours(MyMesh *_mesh)
+{
+    for (MyMesh::FaceIter f_it = _mesh->faces_sbegin(); f_it != _mesh->faces_end(); f_it++) {
+        for (MyMesh::FaceFaceIter ff_it = _mesh->ff_iter(*f_it); ff_it.is_valid(); ff_it)
+            // TODO:
+    }
+}0;
         for(MyMesh::VertexIter vit = mesh.vertices_begin(); vit != mesh.vertices_end(); vit ++)
         {
             counter ++;
@@ -683,13 +696,94 @@ void MainWindow::on_meshIsValid_clicked()
             hasTriangle = true;
 
             break;
-        }
+        }bool checkAllTriangularFace(MyMesh* _mesh);
     }
-
+vérifier que les fichiers contiennent seulement des points 3D
     //==========================
 
     if(hasTriangle && hasSinglePoints)
         qDebug()<<"Mesh ayant des points isolé et également des faces triangulaire";
     else
-        qDebug()<<"Maillage conforme";
+        qDebug()<<"Maillage conforme";*/
+}
+
+bool MainWindow::checkAllTriangularFace(MyMesh* _mesh) {
+    /**
+     * @brief checkAllTriangularFace
+     * @param _mesh
+     * @return bool
+     * @details vérifier que les fichiers contiennent des faces triangulaires.
+     */
+
+    /*for (MyMesh::FaceFaceIter ff_iter = _mesh->ff_iter(*f_it); ff_iter.is_valid(); ff_iter++) {
+    }*/
+
+    for (MyMesh::FaceIter f_it = _mesh->faces_sbegin(); f_it != _mesh->faces_end(); f_it++) {
+        unsigned int counter_edge_for_one_face = 0;
+        for (MyMesh::FaceEdgeIter fe_it = _mesh->fe_iter(_mesh->face_handle(static_cast<unsigned int>(f_it->idx()))); fe_it.is_valid(); fe_it++) {
+            counter_edge_for_one_face++;
+        }
+        if (counter_edge_for_one_face != 3)
+            return false;
+    }
+    return true;
+}
+
+bool MainWindow::checkOnlyPoint(MyMesh *_mesh) {
+    /**
+     * @brief checkOnlyPoint
+     * @param _mesh
+     * @return bool
+     * @details vérifier que les fichiers contiennent seulement des points 3D.
+     */
+
+    if (mesh.faces_empty())
+        return true;
+    return false;
+}
+
+bool MainWindow::checkGlobalNeighbours(MyMesh *_mesh)
+{
+    /**
+     * @brief checkGlobalNeighbours
+     * @param _mesh
+     * @return bool
+     * @details qu'il n'y a pas de faces sans voisines,
+     * de point n'appartenant pas à une arête,
+     * et qu'il n'y a pas d'arêtes n'appartenant pas à une face.
+     */
+
+    bool faces_without_neightbours;
+    bool point_belong_to_edge;
+    bool edge_belong_to_face;
+
+    // faces_without_neightbours
+    for (MyMesh::FaceIter f_it = _mesh->faces_sbegin(); f_it != _mesh->faces_end(); f_it++) {
+        faces_without_neightbours = true;
+        for (MyMesh::FaceFaceIter ff_it = _mesh->ff_iter(*f_it); ff_it.is_valid(); ff_it++) {
+            faces_without_neightbours = false;
+            break;
+        }
+        if (faces_without_neightbours)
+            return false;
+    }
+
+    // point_belong_to_edge
+    for (MyMesh::VertexIter v_it = _mesh->vertices_sbegin(); v_it != _mesh->vertices_end(); v_it++) {
+        point_belong_to_edge = false;
+        for (MyMesh::VertexEdgeIter ve_it = _mesh->ve_iter(*v_it); ve_it.is_valid(); ve_it++) {
+            point_belong_to_edge = true;
+            break;
+        }
+        if (!point_belong_to_edge)
+            return false;
+    }
+
+    // edge_belong_to_face
+    /*for (MyMesh::EdgeIter e_it = _mesh->edges_sbegin(); e_it != _mesh->edges_end(); e_it+++) {
+        edge_belong_to_face = false;
+        for (MyMesh::)
+    }*/
+
+    return true;
 }

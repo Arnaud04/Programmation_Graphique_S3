@@ -50,6 +50,32 @@ public:
     std::vector<MyMesh::Point> getNormalFace (MyMesh* _mesh,VertexHandle vertexFromFace, float barycentre);
     void test();
 
+    /**
+     * @brief checkAllTriangularFace
+     * @param _mesh
+     * @return bool
+     * @details vérifier que les fichiers contiennent des faces triangulaires.
+     */
+    bool checkAllTriangularFace(MyMesh* _mesh);
+
+    /**
+     * @brief checkOnlyPoint
+     * @param _mesh
+     * @return bool
+     * @details vérifier que les fichiers contiennent seulement des points 3D.
+     */
+    bool checkOnlyPoint(MyMesh* _mesh);
+
+    /**
+     * @brief checkGlobalNeighbours
+     * @param _mesh
+     * @return bool
+     * @details qu'il n'y a pas de faces sans voisines,
+     * de point n'appartenant pas à une arête,
+     * et qu'il n'y a pas d'arêtes n'appartenant pas à une face.
+     */
+    bool checkGlobalNeighbours(MyMesh* _mesh);
+
 private slots:
 
 
