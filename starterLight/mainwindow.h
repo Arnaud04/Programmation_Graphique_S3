@@ -47,7 +47,8 @@ public:
     bool containIsolated_points();
     MyMesh::Point getBarycenterFromFace(VertexHandle vh ,FaceHandle fh,MyMesh* _mesh);
     //MyMesh::Point getNormalFace (MyMesh* _mesh,VertexHandle vertexFromFace, float barycentre);
-    std::vector<MyMesh::Point> getNormalFace (MyMesh* _mesh,VertexHandle vertexFromFace, float barycentre);
+    std::vector<MyMesh::Point> getNormalFace (MyMesh* _mesh,VertexHandle v1, VertexHandle v2);// getNormalFace (MyMesh* _mesh,VertexHandle vertexFromFace, float barycentre);
+    void getValence(MyMesh* _mesh);
     void test();
 
 private slots:

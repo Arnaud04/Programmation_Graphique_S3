@@ -104,85 +104,84 @@ float MainWindow::compute_face_area(MyMesh *_mesh, int n_face)
     return area;
 }
 
-std::vector<VertexHandle> getNormalFace (MyMesh* _mesh,VertexHandle v1, VertexHandle v2)
+std::vector<MyMesh::Point> getNormalFace (MyMesh* _mesh,VertexHandle v1, VertexHandle v2)
 {
-         std::vector<MyMesh::Point> normal(2);
 
-         //On fait le produit vectoriel de nos 2 vetceurs
-         float a,b,c;
-         a = (_mesh->point(v1)[1] * _mesh->point(v2)[2])-(_mesh->point(v1)[2]*_mesh->point(v2)[1]);
-         b = (_mesh->point(v1)[0] * _mesh->point(v2)[2])-(_mesh->point(v1)[2]*_mesh->point(v2)[0]);
-         c = (_mesh->point(v1)[0] * _mesh->point(v2)[1])-(_mesh->point(v1)[1]*_mesh->point(v2)[0]);
-        /*
-        //===========================================
+    std::vector<MyMesh::Point> normal;
+    //On fait le produit U (a,b,c) vectoriel de nos 2 veteurs
 
-        VertexHandle vh = _mesh->vertex_handle(vertexID);
-        FaceHandle fh = _mesh->face_handle(faceID);
-        QVector<VertexHandle> listePoints;
-        QVector<VertexHandle> listePointsOnFace;
-        QVector<float> vectors;
-        //On identifie les point voisins de vertexID qui appartiennent à faceID
+    float a,b,c;
+    a = (_mesh->point(v1)[1] * _mesh->point(v2)[2])-(_mesh->point(v1)[2]*_mesh->point(v2)[1]);
+    b = (_mesh->point(v1)[0] * _mesh->point(v2)[2])-(_mesh->point(v1)[2]*_mesh->point(v2)[0]);
+    c = (_mesh->point(v1)[0] * _mesh->point(v2)[1])-(_mesh->point(v1)[1]*_mesh->point(v2)[0]);
 
-        //tout les points voisins de vertexID
-        for (MyMesh::VertexVertexIter curVertex = _mesh->vv_iter(vh); curVertex.is_valid(); curVertex ++)
-        {
-            VertexHandle v = *curVertex;
-            listePoints.append(v);
-        }
-        //parmis ces points ceux qui appartiennent à la faceID
+    //produit scalaire de U
+    float scalU = (a*a)+(b*b)+(c*c);
 
-        for(MyMesh::FaceVertexIter curVertex = _mesh->fv_iter(fh); curVertex.is_valid(); curVertex ++)
-        {
-            VertexHandle v = *curVertex;
-            if(listePoints.contains(v) && v.idx() != vertexID)
-            {
-                listePointsOnFace.append(v);
-            }
-        }
+    float normalX = a/scalU;
+    float normalY = b/scalU;
+    float normalZ = c/scalU;
 
-        //On créer des vecteurs a partir des point obtenu
-        for(int i=0; i<listePointsOnFace.size();i++)
-        {
-            vectors.append((_mesh->point(listePointsOnFace[i])[0])-(_mesh->point(vh)[0]));
-            vectors.append((_mesh->point(listePointsOnFace[i])[1])-(_mesh->point(vh)[1]));
-            vectors.append((_mesh->point(listePointsOnFace[i])[2])-(_mesh->point(vh)[2]));
-
-        }
-
-        //on normalise les vecteurs obtenu
-        QVector<float> norme;
-
-        float tmp = vectors[0]*vectors[0]+vectors[1]*vectors[1]+vectors[2]*vectors[2];
-        norme.append(sqrt(tmp)); //sqrt(x^2+y^2+z^2) : C'est la norme du premier vecteur
-
-        tmp = vectors[3]*vectors[3]+vectors[4]*vectors[4]+vectors[5]*vectors[5];
-        norme.append(sqrt(tmp)); //C'est la norme du second vecteurs
-
-        //normalisation des vecteur :  chacun des vecteur / par la norme
-        for(int i=0; i<listePointsOnFace.size(); i++) //2 vecteur : 2 iterations : 6points
-        {
-            vectors[i*3] = vectors[i*3]/norme[i];
-            vectors[i*3+1] = vectors[i*3+1]/norme[i];
-            vectors[i*3+2] = vectors[i*3+2]/norme[i];
-        }
-
-        float a = vectors[0]*vectors[0+3];
-        float b = vectors[1]*vectors[1+3];
-        float c = vectors[2]*vectors[2+3];
-
-        float prodScal = a+b+c;
-        abs(prodScal); //garantie que le produit scalaire soit positif
-
-        float angle = acos(prodScal)/**180/M_PI*/;
-       // return angle; //en radians
-
-    //===========================================
-
-    */
+    MyMesh::Point pt = MyMesh::Point(normalX,normalY,normalZ);
+    normal.push_back(pt);
     return normal;
 
 }
 
+void getValence(MyMesh* _mesh)
+{
+    /*valences : compter le nombre de sommets connectés par les arêtes de faces à 2, 3, 4, 5, ....  n voisins (histogramme).*/
+
+    std::vector<int> neigborsToVisit;
+    std::vector<int> neigborsVisited;
+    std::vector<int> nRing;
+
+    bool isInside = false;
+
+    //parcours tout les sommets du mesh
+    for(MyMesh::VertexIter curVertex = _mesh->vertices_begin(); curVertex != _mesh->vertices_end(); curVertex++)
+    {
+        //recherche si notre element a deja été visité
+        VertexHandle cv = *curVertex;
+        for(int unsigned i=0; i<neigborsVisited.size(); i++){
+            if(cv.idx() == neigborsVisited[i])
+                isInside = true;
+        }
+
+        if(!isInside)
+        {
+            //on ajoute le sommet surlequel on est comme etant visité
+            neigborsVisited.push_back(cv.idx());
+
+            for(MyMesh::FaceVertexIter curFaceVertex = _mesh->fv_iter(cv); curFaceVertex.is_valid(); curFaceVertex++ )
+            {
+                FaceHandle fh = *curFaceVertex;
+                for(MyMesh::VertexFaceIter curVertexFace = _mesh->fv_iter(fh); curVertexFace.is_valid(); curVertexFace ++ )
+                {
+                    VertexHandle vh2 = *curVertexFace;
+
+                    for(int unsigned i=0; i<neigborsVisited.size(); i++)
+                    {
+                        if(vh2.idx() != neigborsVisited[i])
+                        {
+                           neigborsToVisit.push_back();
+                           nRing[i] +=1;
+                        }
+                    }
+                    neighorsToVisit.pushback//..
+                }
+
+            }
+
+
+        }
+        neigborsVisited.push_back(curVertex);
+
+
+        isInside = false;
+
+    }
+}
 
 /*
  *  permet d'initialiser les couleurs et les épaisseurs des élements du maillage
