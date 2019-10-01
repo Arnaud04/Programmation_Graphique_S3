@@ -44,8 +44,11 @@ public:
     float compute_face_area(MyMesh *_mesh, int n_face);
     void displayMesh(MyMesh *_mesh);
     void resetAllColorsAndThickness(MyMesh *_mesh);
-    bool containPoints(MyMesh *_mesh);
-    bool containTriangles(MyMesh *_mesh);
+    bool containIsolated_points();
+    MyMesh::Point getBarycenterFromFace(VertexHandle vh ,FaceHandle fh,MyMesh* _mesh);
+    //MyMesh::Point getNormalFace (MyMesh* _mesh,VertexHandle vertexFromFace, float barycentre);
+    std::vector<MyMesh::Point> getNormalFace (MyMesh* _mesh,VertexHandle vertexFromFace, float barycentre);
+    void test();
 
 private slots:
 

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE QtCreatorProject>
-<!-- Written by QtCreator 4.5.2, 2019-09-29T15:46:04. -->
+<!-- Written by QtCreator 4.5.2, 2019-10-01T13:22:32. -->
 <qtcreator>
  <data>
   <variable>EnvironmentId</variable>
@@ -323,7 +323,7 @@
     <value type="QString" key="Qt4ProjectManager.Qt4RunConfiguration.ProFile">starterLight.pro</value>
     <value type="bool" key="Qt4ProjectManager.Qt4RunConfiguration.UseDyldImageSuffix">false</value>
     <value type="QString" key="Qt4ProjectManager.Qt4RunConfiguration.UserWorkingDirectory"></value>
-    <value type="QString" key="Qt4ProjectManager.Qt4RunConfiguration.UserWorkingDirectory.default">/home/arnaud/Bureau/Programmation_graphique_S3/livre1/build-starterLight-Bubble2-Debug</value>
+    <value type="QString" key="Qt4ProjectManager.Qt4RunConfiguration.UserWorkingDirectory.default"></value>
     <value type="uint" key="RunConfiguration.QmlDebugServerPort">3768</value>
     <value type="bool" key="RunConfiguration.UseCppDebugger">false</value>
     <value type="bool" key="RunConfiguration.UseCppDebuggerAuto">true</value>

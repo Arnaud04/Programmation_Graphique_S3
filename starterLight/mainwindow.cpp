@@ -104,48 +104,85 @@ float MainWindow::compute_face_area(MyMesh *_mesh, int n_face)
     return area;
 }
 
-bool containTriangles(MyMesh *_mesh)
+std::vector<VertexHandle> getNormalFace (MyMesh* _mesh,VertexHandle v1, VertexHandle v2)
 {
-    int counter = 0;
-    bool hasTriangle = false;
+         std::vector<MyMesh::Point> normal(2);
 
-    for (MyMesh::FaceIter fit = _mesh->faces_begin(); fit != _mesh->faces_end(); fit++)
-    {
-        counter = 0;
-        for(MyMesh::VertexIter vit = _mesh->vertices_begin(); vit != _mesh->vertices_end(); vit ++)
+         //On fait le produit vectoriel de nos 2 vetceurs
+         float a,b,c;
+         a = (_mesh->point(v1)[1] * _mesh->point(v2)[2])-(_mesh->point(v1)[2]*_mesh->point(v2)[1]);
+         b = (_mesh->point(v1)[0] * _mesh->point(v2)[2])-(_mesh->point(v1)[2]*_mesh->point(v2)[0]);
+         c = (_mesh->point(v1)[0] * _mesh->point(v2)[1])-(_mesh->point(v1)[1]*_mesh->point(v2)[0]);
+        /*
+        //===========================================
+
+        VertexHandle vh = _mesh->vertex_handle(vertexID);
+        FaceHandle fh = _mesh->face_handle(faceID);
+        QVector<VertexHandle> listePoints;
+        QVector<VertexHandle> listePointsOnFace;
+        QVector<float> vectors;
+        //On identifie les point voisins de vertexID qui appartiennent à faceID
+
+        //tout les points voisins de vertexID
+        for (MyMesh::VertexVertexIter curVertex = _mesh->vv_iter(vh); curVertex.is_valid(); curVertex ++)
         {
-            counter ++;
+            VertexHandle v = *curVertex;
+            listePoints.append(v);
         }
-        if(counter == 3)
+        //parmis ces points ceux qui appartiennent à la faceID
+
+        for(MyMesh::FaceVertexIter curVertex = _mesh->fv_iter(fh); curVertex.is_valid(); curVertex ++)
         {
-            hasTriangle = true;
-            break;
+            VertexHandle v = *curVertex;
+            if(listePoints.contains(v) && v.idx() != vertexID)
+            {
+                listePointsOnFace.append(v);
+            }
         }
-    }
-    return hasTriangle;
+
+        //On créer des vecteurs a partir des point obtenu
+        for(int i=0; i<listePointsOnFace.size();i++)
+        {
+            vectors.append((_mesh->point(listePointsOnFace[i])[0])-(_mesh->point(vh)[0]));
+            vectors.append((_mesh->point(listePointsOnFace[i])[1])-(_mesh->point(vh)[1]));
+            vectors.append((_mesh->point(listePointsOnFace[i])[2])-(_mesh->point(vh)[2]));
+
+        }
+
+        //on normalise les vecteurs obtenu
+        QVector<float> norme;
+
+        float tmp = vectors[0]*vectors[0]+vectors[1]*vectors[1]+vectors[2]*vectors[2];
+        norme.append(sqrt(tmp)); //sqrt(x^2+y^2+z^2) : C'est la norme du premier vecteur
+
+        tmp = vectors[3]*vectors[3]+vectors[4]*vectors[4]+vectors[5]*vectors[5];
+        norme.append(sqrt(tmp)); //C'est la norme du second vecteurs
+
+        //normalisation des vecteur :  chacun des vecteur / par la norme
+        for(int i=0; i<listePointsOnFace.size(); i++) //2 vecteur : 2 iterations : 6points
+        {
+            vectors[i*3] = vectors[i*3]/norme[i];
+            vectors[i*3+1] = vectors[i*3+1]/norme[i];
+            vectors[i*3+2] = vectors[i*3+2]/norme[i];
+        }
+
+        float a = vectors[0]*vectors[0+3];
+        float b = vectors[1]*vectors[1+3];
+        float c = vectors[2]*vectors[2+3];
+
+        float prodScal = a+b+c;
+        abs(prodScal); //garantie que le produit scalaire soit positif
+
+        float angle = acos(prodScal)/**180/M_PI*/;
+       // return angle; //en radians
+
+    //===========================================
+
+    */
+    return normal;
+
 }
 
-bool containPoints(MyMesh *_mesh)
-{
-    unsigned int numberPointsOnFaces = 0;
-    bool hasSinglePoints = true;
-
-    for (MyMesh::FaceIter fit = _mesh->faces_begin(); fit != _mesh->faces_end(); fit++)
-    {
-        for(MyMesh::VertexIter vit = _mesh->vertices_begin(); vit != _mesh->vertices_end(); vit ++)
-        {
-            numberPointsOnFaces ++;
-        }
-    }
-
-    if(numberPointsOnFaces != _mesh->n_vertices())
-        hasSinglePoints = false;
-
-    qDebug() << "nombre de point sur les faces :" << numberPointsOnFaces;
-    qDebug() << "nombre de points total sur le mesh:"<< _mesh->n_vertices();
-
-    return hasSinglePoints;
-}
 
 /*
  *  permet d'initialiser les couleurs et les épaisseurs des élements du maillage
@@ -366,7 +403,34 @@ void MainWindow::on_pushButton_barycentre_clicked()
         qDebug()<<"coordonnées barycentriques : x= "<< barycenter_x << "y= " << barycenter_y << "z= " << barycenter_z;
     }
 
+}
 
+/*
+ * THis function return the Barycentrique point of a face
+ * It is used to compute normal face
+*/
+MyMesh::Point getBarycenterFromFace(VertexHandle vh ,FaceHandle fh, MyMesh* _mesh)
+{
+    //amelioration la rendre générique pour nimporte quelle face
+    //pour ca remplacer 3 par noombre de sommet sur FaceCourante
+    std::vector<double> coordonnees;
+
+    float x = 0;
+    float y = 0;
+    float z = 0;
+
+    x = x + _mesh->point(vh)[0];
+    y = y + _mesh->point(vh)[1];
+    z = z + _mesh->point(vh)[2];
+
+    float barycenter_x=0.0; float barycenter_y=0.0;float barycenter_z=0.0;
+
+    barycenter_x = x/3.0;
+    barycenter_y = y/3.0;
+    barycenter_z = z/3.0;
+
+    MyMesh::Point barycentriquVertex(barycenter_x, barycenter_y, barycenter_z);
+    return barycentriquVertex;
 
 }
 
@@ -509,6 +573,12 @@ void MainWindow::on_boundingBox_clicked()
         // on affiche le maillage
         displayMesh(&mesh);
 
+
+        /*   delete_vertices() delete_faces()  delete_edges()*/
+        //delete_vertices();
+        //delete_faces();
+
+
 }
 
 void MainWindow::on_pushButton_area_clicked()
@@ -551,9 +621,27 @@ void MainWindow::on_triangleSurface_proportion_clicked()
 
 }
 
+void MainWindow::test()
+{
+    qDebug()<<"TESTTTTTTTTTTTT";
+}
+
+bool MainWindow::containIsolated_points()
+{
+    bool hasIsolatePoint = false;
+
+    //to be complated
+
+    return hasIsolatePoint;
+}
+
+
+
+
 void MainWindow::on_meshIsValid_clicked()
 {
     bool a,b;
+    test();
     //a = containPoints(&mesh);
     //b = containTriangles(&mesh);
     //appel de au fonction précédent non fonctionnel
