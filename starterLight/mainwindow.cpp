@@ -179,27 +179,53 @@ float MainWindow::angle_vector(MyMesh::Point v1, MyMesh::Point v2)
     float scalV2 = (v2[0]*v2[0])+(v2[1]*v2[1])+(v2[2]*v2[2]);
     normV2 = normV2/scalV2;
 
-    float scalU = (a*a)+(b*b)+(c*c);
-
+    //float scalU = (a*a)+(b*b)+(c*c);
+    float scalU = a+b+c;
     float normalX = a/scalU;
     float normalY = b/scalU;
     float normalZ = c/scalU;
-
-    float co ;
-    double prod_scal= scalU;
-    float arc_sin=asin(prod_scal);
-    float arc_cos=acos(prod_scal);
-
+    float normv1 = v1.norm();
+    float normv2 = v2.norm();
+    //float co ;
+    //float prod_scal= scalU;
+    float arc_sin=asin(scalU);
+    float arc_cos=acos(scalU);
+    //qDebug()<<"arcos : "<<arc_cos*180/3.14;
     if(arc_sin<0)
-       return -arc_cos*180/3.14;
+       return static_cast<float>(-arc_cos*180/3.14);
     else
-       return arc_cos*180/3.14;
+       return static_cast<float>(arc_cos*180/3.14);
     //MyMesh::Point normal = MyMesh::Point(normalX,normalY,normalZ);
+}
+
+float MainWindow::moy_angle_vertice_faces(MyMesh *_mesh, VertexHandle v)
+{
+    std::vector<VertexHandle> v_vertex;
+    std::vector<MyMesh::Point> points;
+    for(MyMesh::VertexFaceIter vf = _mesh->vf_begin(v);vf.is_valid();vf++)
+    {
+        for(MyMesh::FaceVertexIter fv = _mesh->fv_begin(*vf); fv.is_valid();fv++)
+        {
+
+            v_vertex.push_back(*fv);
+        }
+        points.push_back(getNormalFace(_mesh,v_vertex.at(0),v_vertex.at(1)));
+        v_vertex.clear();
+    }
+    float moy = 0;
+    for(int i = 0; i<points.size(); i++)
+    {
+        moy+=angle_vector(_mesh->point(v),points.at(i));
+    }
+    return moy/points.size();
 }
 
 void MainWindow::angles_normal_points(MyMesh *_mesh)
 {
-
+    for(MyMesh::VertexIter v = _mesh->vertices_begin();v != _mesh->vertices_end();v++)
+    {
+        qDebug()<<moy_angle_vertice_faces(_mesh,*v);
+    }
 }
 
 
@@ -719,4 +745,9 @@ void MainWindow::on_meshIsValid_clicked()
 void MainWindow::on_show_pts_norm_clicked()
 {
     normals_points(&mesh);
+}
+
+void MainWindow::on_pushButton_fv_angle_clicked()
+{
+    angles_normal_points(&mesh);
 }

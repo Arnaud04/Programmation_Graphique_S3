@@ -51,6 +51,7 @@ public:
     MyMesh::Point getNormalPoint (MyMesh* _mesh,VertexHandle vertexFromFace);
     void normals_points(MyMesh * _mesh);
     float angle_vector(MyMesh::Point v1, MyMesh::Point v2);
+    float moy_angle_vertice_faces(MyMesh * _mesh, VertexHandle v);
     void angles_normal_points(MyMesh * _mesh);
     void test();
 
@@ -72,6 +73,8 @@ private slots:
     void on_meshIsValid_clicked();
 
     void on_show_pts_norm_clicked();
+
+    void on_pushButton_fv_angle_clicked();
 
 private:
 

@@ -103,6 +103,13 @@
           </widget>
          </item>
          <item>
+          <widget class="QPushButton" name="pushButton_fv_angle">
+           <property name="text">
+            <string>voir angles faces vertex</string>
+           </property>
+          </widget>
+         </item>
+         <item>
           <widget class="QPushButton" name="getInformation">
            <property name="text">
             <string>calcul nombre d'element</string>
