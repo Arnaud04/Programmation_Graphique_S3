@@ -87,9 +87,23 @@
         </widget>
        </item>
        <item>
-        <widget class="QPushButton" name="pushButton">
+        <widget class="QPushButton" name="getValanceRing">
          <property name="text">
-          <string>PushButton</string>
+          <string>Calculer valence</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="show_pts_norm">
+         <property name="text">
+          <string>visualiser Points normales</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="pushButton_fv_angle">
+         <property name="text">
+          <string>visualiser angles des faces d'un point</string>
          </property>
         </widget>
        </item>

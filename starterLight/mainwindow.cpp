@@ -104,28 +104,184 @@ float MainWindow::compute_face_area(MyMesh *_mesh, int n_face)
     return area;
 }
 
-std::vector<MyMesh::Point> getNormalFace (MyMesh* _mesh,VertexHandle v1, VertexHandle v2)
+MyMesh::Point MainWindow::getNormalFace(MyMesh* _mesh,VertexHandle v1, VertexHandle v2)
+{
+     MyMesh::Point normal;
+
+     //On fait le produit vectoriel de nos 2 vetceurs
+     float a,b,c;
+     a = (_mesh->point(v1)[1] * _mesh->point(v2)[2])-(_mesh->point(v1)[2]*_mesh->point(v2)[1]);
+     b = (_mesh->point(v1)[0] * _mesh->point(v2)[2])-(_mesh->point(v1)[2]*_mesh->point(v2)[0]);
+     c = (_mesh->point(v1)[0] * _mesh->point(v2)[1])-(_mesh->point(v1)[1]*_mesh->point(v2)[0]);
+
+     //On fait le produit U (a,b,c) vectoriel de nos 2 veteurs
+
+     //produit scalaire de U
+     float scalU = (a*a)+(b*b)+(c*c);
+
+     float normalX = a/scalU;
+     float normalY = b/scalU;
+     float normalZ = c/scalU;
+
+     normal = MyMesh::Point(normalX,normalY,normalZ);
+
+     return normal;
+
+}
+
+MyMesh::Point MainWindow::getNormalPoint(MyMesh *_mesh, VertexHandle vertexFromFace)
+{
+    std::vector<VertexHandle> v_vertex;
+    std::vector<MyMesh::Point> points;
+    for(MyMesh::VertexFaceIter vf = _mesh->vf_begin(vertexFromFace);vf.is_valid();vf++)
+    {
+        for(MyMesh::FaceVertexIter fv = _mesh->fv_begin(*vf);fv.is_valid();fv++)
+        {
+            v_vertex.push_back(*fv);
+        }
+        points.push_back(getNormalFace(_mesh,v_vertex.at(0),v_vertex.at(1)));
+        v_vertex.clear();
+    }
+    MyMesh::Point moyenne;
+    for(int i = 0; i<points.size(); i++)
+    {
+        moyenne +=points.at(i);
+    }
+    moyenne = moyenne / points.size();
+    return moyenne;
+}
+
+void MainWindow::normals_points(MyMesh * _mesh)
 {
 
-    std::vector<MyMesh::Point> normal;
-    //On fait le produit U (a,b,c) vectoriel de nos 2 veteurs
+    for(MyMesh::VertexIter vi = _mesh->vertices_begin(); vi != _mesh->vertices_end(); vi++)
+    {
+        qDebug()<<"normal at "<<vi->idx()<<" : ";
+        MyMesh::Point pt = getNormalPoint(_mesh, *vi);
+        qDebug()<<pt[0]<<"x";
+        qDebug()<<pt[1]<<"y";
+        qDebug()<<pt[2]<<"z";
+    }
+}
 
+float MainWindow::angle_vector(MyMesh::Point v1, MyMesh::Point v2)
+{
     float a,b,c;
-    a = (_mesh->point(v1)[1] * _mesh->point(v2)[2])-(_mesh->point(v1)[2]*_mesh->point(v2)[1]);
-    b = (_mesh->point(v1)[0] * _mesh->point(v2)[2])-(_mesh->point(v1)[2]*_mesh->point(v2)[0]);
-    c = (_mesh->point(v1)[0] * _mesh->point(v2)[1])-(_mesh->point(v1)[1]*_mesh->point(v2)[0]);
+    a = (v1[1] * v2[2])-(v1[2]*v2[1]);
+    b = (v1[0] * v2[2])-(v1[2]*v2[0]);
+    c = (v1[0] * v2[1])-(v1[1]*v2[0]);
 
-    //produit scalaire de U
-    float scalU = (a*a)+(b*b)+(c*c);
+    float normV1 = sqrt(pow(v1[0],2)+pow(v1[1],2)+pow(v1[2],2));
+    float scalV1 = (v1[0]*v1[0])+(v1[1]*v1[1])+(v1[2]*v1[2]);
+    normV1 = normV1/scalV1;
+    float normV2 = sqrt(pow(v2[0],2)+pow(v2[1],2)+pow(v2[2],2));
+    float scalV2 = (v2[0]*v2[0])+(v2[1]*v2[1])+(v2[2]*v2[2]);
+    normV2 = normV2/scalV2;
 
+    //float scalU = (a*a)+(b*b)+(c*c);
+    float scalU = a+b+c;
     float normalX = a/scalU;
     float normalY = b/scalU;
     float normalZ = c/scalU;
+    float normv1 = v1.norm();
+    float normv2 = v2.norm();
+    //float co ;
+    //float prod_scal= scalU;
+    float arc_sin=asin(scalU);
+    float arc_cos=acos(scalU);
+    //qDebug()<<"arcos : "<<arc_cos*180/3.14;
+    if(arc_sin<0)
+       return static_cast<float>(-arc_cos*180/3.14);
+    else
+       return static_cast<float>(arc_cos*180/3.14);
+    //MyMesh::Point normal = MyMesh::Point(normalX,normalY,normalZ);
+}
 
-    MyMesh::Point pt = MyMesh::Point(normalX,normalY,normalZ);
-    normal.push_back(pt);
-    return normal;
+float MainWindow::moy_angle_vertice_faces(MyMesh *_mesh, VertexHandle v)
+{
+    std::vector<VertexHandle> v_vertex;
+    std::vector<MyMesh::Point> points;
+    for(MyMesh::VertexFaceIter vf = _mesh->vf_begin(v);vf.is_valid();vf++)
+    {
+        for(MyMesh::FaceVertexIter fv = _mesh->fv_begin(*vf); fv.is_valid();fv++)
+        {
 
+            v_vertex.push_back(*fv);
+        }
+        points.push_back(getNormalFace(_mesh,v_vertex.at(0),v_vertex.at(1)));
+        v_vertex.clear();
+    }
+    float moy = 0;
+    for(int i = 0; i<points.size(); i++)
+    {
+        moy+=angle_vector(_mesh->point(v),points.at(i));
+    }
+    return moy/points.size();
+}
+
+void MainWindow::angles_normal_points(MyMesh *_mesh)
+{
+    for(MyMesh::VertexIter v = _mesh->vertices_begin();v != _mesh->vertices_end();v++)
+    {
+        qDebug()<<moy_angle_vertice_faces(_mesh,*v);
+    }
+}
+
+void getNRing(MyMesh* _mesh)
+{
+    /*valences : compter le nombre de sommets connectés par les arêtes de faces à 2, 3, 4, 5, ....  n voisins (histogramme).*/
+
+    std::vector<int> neigborsToVisit;
+    std::vector<int> neigborsVisited;
+    std::vector<int> nRing;
+
+    bool isInside = false;
+
+    //parcours tous les sommets du mesh
+    for(MyMesh::VertexIter curVertex = _mesh->vertices_begin(); curVertex != _mesh->vertices_end(); curVertex++)
+    {
+        //recherche si notre element a deja été visité
+        VertexHandle cv = *curVertex;
+        for(int unsigned i=0; i<neigborsVisited.size(); i++){
+            if(cv.idx() == neigborsVisited[i])
+                isInside = true;
+        }
+        qDebug()<<"sommet courant :"<<cv.idx();
+
+        if(!isInside)
+        {
+            //on ajoute le sommet sur lequel on est comme etant visité
+            neigborsVisited.push_back(cv.idx());
+
+            for(MyMesh::VertexFaceIter curFaceVertex = _mesh->vf_iter(cv); curFaceVertex.is_valid(); curFaceVertex++ )
+            {
+                FaceHandle fh = *curFaceVertex;
+                for(MyMesh::FaceVertexIter curVertexFace = _mesh->fv_iter(fh); curVertexFace.is_valid(); curVertexFace ++ )
+                {
+                    VertexHandle vh2 = *curVertexFace;
+
+                    for(int unsigned i=0; i<neigborsVisited.size(); i++)
+                    {
+                        if(vh2.idx() != neigborsVisited[i])
+                        {
+                           neigborsToVisit.push_back(vh2.idx());
+                           nRing[i] +=1;
+                           qDebug()<<"ses voisins"<<vh2.idx();
+                        }
+                    }
+                    //neighorsToVisit.pushback//..
+                }
+
+            }
+
+
+        }
+        neigborsVisited.push_back(cv.idx());
+
+
+        isInside = false;
+
+    }
 }
 
 void getValence(MyMesh* _mesh)
@@ -138,7 +294,7 @@ void getValence(MyMesh* _mesh)
 
     bool isInside = false;
 
-    //parcours tout les sommets du mesh
+    //parcours tous les sommets du mesh
     for(MyMesh::VertexIter curVertex = _mesh->vertices_begin(); curVertex != _mesh->vertices_end(); curVertex++)
     {
         //recherche si notre element a deja été visité
@@ -147,16 +303,17 @@ void getValence(MyMesh* _mesh)
             if(cv.idx() == neigborsVisited[i])
                 isInside = true;
         }
+        qDebug()<<"sommet courant :"<<cv.idx();
 
         if(!isInside)
         {
-            //on ajoute le sommet surlequel on est comme etant visité
+            //on ajoute le sommet sur lequel on est comme etant visité
             neigborsVisited.push_back(cv.idx());
 
-            for(MyMesh::FaceVertexIter curFaceVertex = _mesh->fv_iter(cv); curFaceVertex.is_valid(); curFaceVertex++ )
+            for(MyMesh::VertexFaceIter curFaceVertex = _mesh->vf_iter(cv); curFaceVertex.is_valid(); curFaceVertex++ )
             {
                 FaceHandle fh = *curFaceVertex;
-                for(MyMesh::VertexFaceIter curVertexFace = _mesh->fv_iter(fh); curVertexFace.is_valid(); curVertexFace ++ )
+                for(MyMesh::FaceVertexIter curVertexFace = _mesh->fv_iter(fh); curVertexFace.is_valid(); curVertexFace ++ )
                 {
                     VertexHandle vh2 = *curVertexFace;
 
@@ -164,18 +321,19 @@ void getValence(MyMesh* _mesh)
                     {
                         if(vh2.idx() != neigborsVisited[i])
                         {
-                           neigborsToVisit.push_back();
+                           neigborsToVisit.push_back(vh2.idx());
                            nRing[i] +=1;
+                           qDebug()<<"ses voisins"<<vh2.idx();
                         }
                     }
-                    neighorsToVisit.pushback//..
+                    //neighorsToVisit.pushback//..
                 }
 
             }
 
 
         }
-        neigborsVisited.push_back(curVertex);
+        neigborsVisited.push_back(cv.idx());
 
 
         isInside = false;
@@ -393,7 +551,7 @@ void MainWindow::on_pushButton_barycentre_clicked()
         qDebug() << "z " <<mesh.point(vh)[2] << " ";*/
     }
 
-            float barycenter_x=0.0; float barycenter_y=0.0;float barycenter_z=0.0;
+    float barycenter_x=0.0; float barycenter_y=0.0;float barycenter_z=0.0;
     if((x && y && z) != 0)
     {
         barycenter_x = x/(mesh.n_faces());
@@ -410,6 +568,7 @@ void MainWindow::on_pushButton_barycentre_clicked()
 */
 MyMesh::Point getBarycenterFromFace(VertexHandle vh ,FaceHandle fh, MyMesh* _mesh)
 {
+
     //amelioration la rendre générique pour nimporte quelle face
     //pour ca remplacer 3 par noombre de sommet sur FaceCourante
     std::vector<double> coordonnees;
@@ -620,11 +779,6 @@ void MainWindow::on_triangleSurface_proportion_clicked()
 
 }
 
-void MainWindow::test()
-{
-    qDebug()<<"TESTTTTTTTTTTTT";
-}
-
 bool MainWindow::containIsolated_points()
 {
     bool hasIsolatePoint = false;
@@ -634,13 +788,10 @@ bool MainWindow::containIsolated_points()
     return hasIsolatePoint;
 }
 
-
-
-
 void MainWindow::on_meshIsValid_clicked()
 {
     bool a,b;
-    test();
+
     //a = containPoints(&mesh);
     //b = containTriangles(&mesh);
     //appel de au fonction précédent non fonctionnel
@@ -691,4 +842,107 @@ void MainWindow::on_meshIsValid_clicked()
         qDebug()<<"Mesh ayant des points isolé et également des faces triangulaire";
     else
         qDebug()<<"Maillage conforme";
+}
+
+
+
+void MainWindow::on_getValanceRing_clicked()
+{
+    int const nb_vertices = mesh.n_vertices();
+    qDebug()<<"nb sommet"<<nb_vertices;
+
+    float nRing[nb_vertices] = {0};
+    bool isInsideList =true;
+
+    //parcours tous les sommets du mesh
+    for(MyMesh::VertexIter curVertex = mesh.vertices_begin(); curVertex != mesh.vertices_end(); curVertex++)
+    {
+        VertexHandle cv = *curVertex;
+
+        int reachableVertex =0;
+        int degre = 0;
+        int count = 0;
+
+        qDebug()<<"Sommet de départ : "<<cv.idx();
+
+        std::list<int> neigborsVisited;
+        std::list<int> neigborsToVisit;
+        neigborsToVisit.push_back(cv.idx());
+
+        while(!neigborsToVisit.empty())
+        {
+
+            VertexHandle v = mesh.vertex_handle(neigborsToVisit.front());
+
+            int numberElement = 0;
+            for(MyMesh::VertexFaceIter curFaceVertex = mesh.vf_iter(v); curFaceVertex.is_valid(); curFaceVertex++ )
+            {
+                FaceHandle fh = *curFaceVertex;
+                for(MyMesh::FaceVertexIter curVertexFace = mesh.fv_iter(fh); curVertexFace.is_valid(); curVertexFace ++ )
+                {
+                    VertexHandle vh2 = *curVertexFace;
+                    std::list<int>::iterator it,it2;
+
+                    for(it = neigborsVisited.begin(); it!=neigborsVisited.end(); ++it)
+                    {
+                        if(vh2.idx() == *it)
+                        {
+                            isInsideList = true;
+                        }
+                    }
+
+                    if(neigborsVisited.empty())
+                        isInsideList = false;
+
+                    bool duplicateElement = (std::find(neigborsToVisit.begin(), neigborsToVisit.end(),vh2.idx())!= neigborsToVisit.end());
+
+                    if(isInsideList == false && !duplicateElement)
+                    {
+                        neigborsToVisit.push_back(vh2.idx());
+                        numberElement ++;
+                    }
+                    isInsideList = false;
+
+                }
+
+            }
+
+            int elementVisited = neigborsToVisit.front();
+            neigborsVisited.push_back(elementVisited);
+
+            neigborsToVisit.remove(elementVisited);
+
+            std::list<int>::iterator it;
+
+            if(count == 0 && !neigborsToVisit.empty())
+            {
+                //vertexValence = neigborsToVisit.size();
+                count = neigborsToVisit.size();
+                reachableVertex  += neigborsToVisit.size();;
+                nRing[degre] += (float)reachableVertex;
+                qDebug()<<"nombre de sommets atteignables par une valance"<<degre+2<<" :"<<reachableVertex;
+                degre ++;
+            }
+
+            if(count > 0)
+                count -= 1;
+
+        }
+
+    }
+    qDebug()<<"=======================";
+    for(int i=0; i<mesh.n_vertices(); i++)
+    {
+        qDebug()<<"nombre de sommets moyen atteignables par une valance"<<i+2<<nRing[i]/(float)nb_vertices /*distance(nRing.begin(), it)+2<<" :"<<*it*/;
+    }
+}
+
+void MainWindow::on_show_pts_norm_clicked()
+{
+    normals_points(&mesh);
+}
+
+void MainWindow::on_pushButton_fv_angle_clicked()
+{
+    angles_normal_points(&mesh);
 }
