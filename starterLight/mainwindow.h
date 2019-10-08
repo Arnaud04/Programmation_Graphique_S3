@@ -44,28 +44,34 @@ public:
     float compute_face_area(MyMesh *_mesh, int n_face);
     void displayMesh(MyMesh *_mesh);
     void resetAllColorsAndThickness(MyMesh *_mesh);
+    MyMesh::Point getNormalPoint (MyMesh* _mesh,VertexHandle vertexFromFace);
+
+    void normals_points(MyMesh * _mesh);
+    float angle_vector(MyMesh::Point v1, MyMesh::Point v2);
+    float moy_angle_vertice_faces(MyMesh * _mesh, VertexHandle v);
+    void angles_normal_points(MyMesh * _mesh);
     bool containIsolated_points();
+    void getNRing(MyMesh *_mesh);
+    void getValence(MyMesh* _mesh);
     MyMesh::Point getBarycenterFromFace(VertexHandle vh ,FaceHandle fh,MyMesh* _mesh);
-    //MyMesh::Point getNormalFace (MyMesh* _mesh,VertexHandle vertexFromFace, float barycentre);
-    std::vector<MyMesh::Point> getNormalFace (MyMesh* _mesh,VertexHandle vertexFromFace, float barycentre);
-    void test();
+    MyMesh::Point getNormalFace (MyMesh* _mesh,VertexHandle v1, VertexHandle v2);
+    //std::vector<MyMesh::Point> getNormalFace (MyMesh* _mesh,VertexHandle v1, VertexHandle v2);// getNormalFace (MyMesh* _mesh,VertexHandle vertexFromFace, float barycentre);
+
 
 private slots:
 
-
     void on_pushButton_chargement_clicked();
-
     void on_pushButton_barycentre_clicked();
-
     void on_getInformation_clicked();
-
     void on_boundingBox_clicked();
-
     void on_pushButton_area_clicked();
-
     void on_triangleSurface_proportion_clicked();
-
     void on_meshIsValid_clicked();
+    void on_getValanceRing_clicked();
+
+    void on_show_pts_norm_clicked();
+
+    void on_pushButton_fv_angle_clicked();
 
 private:
 
