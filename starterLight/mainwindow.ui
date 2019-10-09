@@ -96,14 +96,21 @@
        <item>
         <widget class="QPushButton" name="show_pts_norm">
          <property name="text">
-          <string>visualiser Points normales</string>
+          <string>calculer normales sommets</string>
          </property>
         </widget>
        </item>
        <item>
         <widget class="QPushButton" name="pushButton_fv_angle">
          <property name="text">
-          <string>visualiser angles des faces d'un point</string>
+          <string>deviation des normales</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="getDiedreAngle">
+         <property name="text">
+          <string>angles dièdres</string>
          </property>
         </widget>
        </item>

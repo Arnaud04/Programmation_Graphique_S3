@@ -38,6 +38,7 @@ public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
 
+
     float compute_area(MyMesh *_mesh);
     float get_min_area(MyMesh *_mesh);
     float get_max_area(MyMesh *_mesh);
@@ -45,18 +46,17 @@ public:
     void displayMesh(MyMesh *_mesh);
     void resetAllColorsAndThickness(MyMesh *_mesh);
     MyMesh::Point getNormalPoint (MyMesh* _mesh,VertexHandle vertexFromFace);
-
+    bool checkGlobalNeighbours(MyMesh* _mesh);
+    bool checkAllTriangularFace(MyMesh* _mesh);
     void normals_points(MyMesh * _mesh);
-    float angle_vector(MyMesh::Point v1, MyMesh::Point v2);
+    bool checkOnlyPoint();
+    float angle_vector(MyMesh::Point vecteur1, MyMesh::Point vecteur2);
     float moy_angle_vertice_faces(MyMesh * _mesh, VertexHandle v);
     void angles_normal_points(MyMesh * _mesh);
-    bool containIsolated_points();
-    void getNRing(MyMesh *_mesh);
-    void getValence(MyMesh* _mesh);
+    void putVertexColor(QVector <float> angles, float degresMin, float degresMax);
     MyMesh::Point getBarycenterFromFace(VertexHandle vh ,FaceHandle fh,MyMesh* _mesh);
-    MyMesh::Point getNormalFace (MyMesh* _mesh,VertexHandle v1, VertexHandle v2);
+    MyMesh::Point getNormalFace (MyMesh* _mesh,VertexHandle v0,VertexHandle v1, VertexHandle v2);
     //std::vector<MyMesh::Point> getNormalFace (MyMesh* _mesh,VertexHandle v1, VertexHandle v2);// getNormalFace (MyMesh* _mesh,VertexHandle vertexFromFace, float barycentre);
-
 
 private slots:
 
@@ -68,10 +68,10 @@ private slots:
     void on_triangleSurface_proportion_clicked();
     void on_meshIsValid_clicked();
     void on_getValanceRing_clicked();
-
     void on_show_pts_norm_clicked();
-
     void on_pushButton_fv_angle_clicked();
+
+    void on_getDiedreAngle_clicked();
 
 private:
 

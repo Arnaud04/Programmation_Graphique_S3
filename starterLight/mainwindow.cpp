@@ -104,28 +104,36 @@ float MainWindow::compute_face_area(MyMesh *_mesh, int n_face)
     return area;
 }
 
-MyMesh::Point MainWindow::getNormalFace(MyMesh* _mesh,VertexHandle v1, VertexHandle v2)
+MyMesh::Point MainWindow::getNormalFace(MyMesh* _mesh,VertexHandle v0, VertexHandle v1, VertexHandle v2)
 {
-     MyMesh::Point normal;
+     MyMesh::Point resultat;
+     QVector<float> vecteur_U, vecteur_V, produitVect, normal;
 
-     //On fait le produit vectoriel de nos 2 vetceurs
-     float a,b,c;
-     a = (_mesh->point(v1)[1] * _mesh->point(v2)[2])-(_mesh->point(v1)[2]*_mesh->point(v2)[1]);
-     b = (_mesh->point(v1)[0] * _mesh->point(v2)[2])-(_mesh->point(v1)[2]*_mesh->point(v2)[0]);
-     c = (_mesh->point(v1)[0] * _mesh->point(v2)[1])-(_mesh->point(v1)[1]*_mesh->point(v2)[0]);
+     //on créer les vecteurs vecteur_U :v0v1 et vecteur_V : v0v2
+     for(int i=0; i<3; i++)
+     {
+         vecteur_U.push_back(_mesh->point(v1)[i] -_mesh->point(v0)[i]);
+         vecteur_V.push_back(_mesh->point(v2)[i] -_mesh->point(v0)[i]);
+     }
 
-     //On fait le produit U (a,b,c) vectoriel de nos 2 veteurs
+     //On fait le produit vectoriel de U et V
 
-     //produit scalaire de U
-     float scalU = (a*a)+(b*b)+(c*c);
+     produitVect.push_back(vecteur_U[1]*vecteur_V[2] - vecteur_U[2]*vecteur_V[1]);
+     produitVect.push_back(vecteur_U[0]*vecteur_V[2] - vecteur_U[2]*vecteur_V[0]);
+     produitVect.push_back(vecteur_U[0]*vecteur_V[1] - vecteur_U[1]*vecteur_V[0]);
 
-     float normalX = a/scalU;
-     float normalY = b/scalU;
-     float normalZ = c/scalU;
+     //On calcul sa norme:
+     float normeVect = sqrt(produitVect[0]*produitVect[0]+produitVect[1]*produitVect[1]+produitVect[2]*produitVect[2]);
 
-     normal = MyMesh::Point(normalX,normalY,normalZ);
+     //On determine la normal
+     for(int i=0; i<3; i++)
+     {
+         normal.push_back(produitVect[i]/normeVect);
+     }
 
-     return normal;
+     resultat = MyMesh::Point(normal[0],normal[1],normal[2]);
+
+     return resultat;
 
 }
 
@@ -133,21 +141,27 @@ MyMesh::Point MainWindow::getNormalPoint(MyMesh *_mesh, VertexHandle vertexFromF
 {
     std::vector<VertexHandle> v_vertex;
     std::vector<MyMesh::Point> points;
+
     for(MyMesh::VertexFaceIter vf = _mesh->vf_begin(vertexFromFace);vf.is_valid();vf++)
     {
         for(MyMesh::FaceVertexIter fv = _mesh->fv_begin(*vf);fv.is_valid();fv++)
         {
-            v_vertex.push_back(*fv);
+            VertexHandle vert = *fv;
+            if(vert.idx() != vertexFromFace.idx())
+                v_vertex.push_back(*fv);
         }
-        points.push_back(getNormalFace(_mesh,v_vertex.at(0),v_vertex.at(1)));
+
+        points.push_back(getNormalFace(_mesh,vertexFromFace,v_vertex.at(0),v_vertex.at(1)));
         v_vertex.clear();
     }
+
     MyMesh::Point moyenne;
-    for(int i = 0; i<points.size(); i++)
+    for(unsigned int i = 0; i<points.size(); i++)
     {
         moyenne +=points.at(i);
     }
     moyenne = moyenne / points.size();
+
     return moyenne;
 }
 
@@ -164,182 +178,106 @@ void MainWindow::normals_points(MyMesh * _mesh)
     }
 }
 
-float MainWindow::angle_vector(MyMesh::Point v1, MyMesh::Point v2)
+float MainWindow::angle_vector(MyMesh::Point vecteur1, MyMesh::Point vecteur2)
 {
-    float a,b,c;
-    a = (v1[1] * v2[2])-(v1[2]*v2[1]);
-    b = (v1[0] * v2[2])-(v1[2]*v2[0]);
-    c = (v1[0] * v2[1])-(v1[1]*v2[0]);
+    float normeV1, normeV2,produitScal,angle;
 
-    float normV1 = sqrt(pow(v1[0],2)+pow(v1[1],2)+pow(v1[2],2));
-    float scalV1 = (v1[0]*v1[0])+(v1[1]*v1[1])+(v1[2]*v1[2]);
-    normV1 = normV1/scalV1;
-    float normV2 = sqrt(pow(v2[0],2)+pow(v2[1],2)+pow(v2[2],2));
-    float scalV2 = (v2[0]*v2[0])+(v2[1]*v2[1])+(v2[2]*v2[2]);
-    normV2 = normV2/scalV2;
+    produitScal = (vecteur1[0]*vecteur2[0]+vecteur1[1]*vecteur2[1]+vecteur1[2]*vecteur2[2]);
 
-    //float scalU = (a*a)+(b*b)+(c*c);
-    float scalU = a+b+c;
-    float normalX = a/scalU;
-    float normalY = b/scalU;
-    float normalZ = c/scalU;
-    float normv1 = v1.norm();
-    float normv2 = v2.norm();
-    //float co ;
-    //float prod_scal= scalU;
-    float arc_sin=asin(scalU);
-    float arc_cos=acos(scalU);
-    //qDebug()<<"arcos : "<<arc_cos*180/3.14;
-    if(arc_sin<0)
-       return static_cast<float>(-arc_cos*180/3.14);
-    else
-       return static_cast<float>(arc_cos*180/3.14);
-    //MyMesh::Point normal = MyMesh::Point(normalX,normalY,normalZ);
+    normeV1 = sqrt(vecteur1[0]*vecteur1[0]+vecteur1[1]*vecteur1[1]+vecteur1[2]*vecteur1[2]);
+    normeV2 = sqrt(vecteur2[0]*vecteur2[0]+vecteur2[1]*vecteur2[1]+vecteur2[2]*vecteur2[2]);
+
+    float cosAngle = produitScal/(normeV1*normeV2);
+
+    angle = acos(cosAngle); //angle en radians
+
+    angle = static_cast<float>(cosAngle*180/3.14); //angle en degré
+
+
+    return angle;
+
 }
 
 float MainWindow::moy_angle_vertice_faces(MyMesh *_mesh, VertexHandle v)
 {
     std::vector<VertexHandle> v_vertex;
     std::vector<MyMesh::Point> points;
+    VertexHandle v1 = v;
+
     for(MyMesh::VertexFaceIter vf = _mesh->vf_begin(v);vf.is_valid();vf++)
     {
         for(MyMesh::FaceVertexIter fv = _mesh->fv_begin(*vf); fv.is_valid();fv++)
         {
-
-            v_vertex.push_back(*fv);
+            VertexHandle v2 = *fv;
+            if(v2.idx() != v1.idx())
+                v_vertex.push_back(*fv);
         }
-        points.push_back(getNormalFace(_mesh,v_vertex.at(0),v_vertex.at(1)));
+        points.push_back(getNormalFace(_mesh,v,v_vertex.at(0),v_vertex.at(1)));
         v_vertex.clear();
     }
-    float moy = 0;
-    for(int i = 0; i<points.size(); i++)
+
+    float maxAngle = 0;
+    for(unsigned int i = 0; i<points.size(); i++)
     {
-        moy+=angle_vector(_mesh->point(v),points.at(i));
+        if(maxAngle < angle_vector(_mesh->point(v),points.at(i)))
+                maxAngle = angle_vector(_mesh->point(v),points.at(i));
     }
-    return moy/points.size();
+    return maxAngle;
+}
+
+void MainWindow::putVertexColor(QVector <float> angles, float degresMin, float degresMax)
+{
+    float interval = 255/(degresMax-degresMin);
+    qDebug()<<degresMax;
+    qDebug()<<degresMin;
+    float colorIntencity;
+    int colorVertex;
+
+    for(MyMesh::VertexIter v = mesh.vertices_begin();v != mesh.vertices_end();v++)
+    {
+        VertexHandle curVert = *v;
+        colorIntencity = angles.at(curVert.idx());
+
+        mesh.data(curVert).thickness = 8;
+        //qDebug()<<(int)colorIntencity*interval;
+
+        colorVertex = (int)colorIntencity*interval;
+        if(colorVertex>255)
+            colorVertex=255;
+
+        mesh.set_color(curVert, MyMesh::Color(0,colorVertex, 0));
+    }
+    mesh.update_normals();
+    //this->mesh = mesh;
+    // initialisation des couleurs et épaisseurs (sommets et arêtes) du mesh
+    //resetAllColorsAndThickness(&mesh);
+
+    // on affiche le maillage
+    displayMesh(&mesh);
+
 }
 
 void MainWindow::angles_normal_points(MyMesh *_mesh)
 {
+    float degresMin = 360;
+    float degresMax = 0;
+    QVector <float> angles;
+
     for(MyMesh::VertexIter v = _mesh->vertices_begin();v != _mesh->vertices_end();v++)
     {
-        qDebug()<<moy_angle_vertice_faces(_mesh,*v);
+        VertexHandle vh = *v;
+        float AngularEcart = moy_angle_vertice_faces(_mesh,*v);
+        qDebug()<<"vertex :"<<vh.idx()<<":"<<moy_angle_vertice_faces(_mesh,*v);
+        angles.push_back(AngularEcart);
+        if(degresMin > AngularEcart)
+            degresMin = AngularEcart;
+        if(degresMax < AngularEcart)
+            degresMax = AngularEcart;
     }
+    putVertexColor(angles, degresMin, degresMax);
 }
 
-void getNRing(MyMesh* _mesh)
-{
-    /*valences : compter le nombre de sommets connectés par les arêtes de faces à 2, 3, 4, 5, ....  n voisins (histogramme).*/
 
-    std::vector<int> neigborsToVisit;
-    std::vector<int> neigborsVisited;
-    std::vector<int> nRing;
-
-    bool isInside = false;
-
-    //parcours tous les sommets du mesh
-    for(MyMesh::VertexIter curVertex = _mesh->vertices_begin(); curVertex != _mesh->vertices_end(); curVertex++)
-    {
-        //recherche si notre element a deja été visité
-        VertexHandle cv = *curVertex;
-        for(int unsigned i=0; i<neigborsVisited.size(); i++){
-            if(cv.idx() == neigborsVisited[i])
-                isInside = true;
-        }
-        qDebug()<<"sommet courant :"<<cv.idx();
-
-        if(!isInside)
-        {
-            //on ajoute le sommet sur lequel on est comme etant visité
-            neigborsVisited.push_back(cv.idx());
-
-            for(MyMesh::VertexFaceIter curFaceVertex = _mesh->vf_iter(cv); curFaceVertex.is_valid(); curFaceVertex++ )
-            {
-                FaceHandle fh = *curFaceVertex;
-                for(MyMesh::FaceVertexIter curVertexFace = _mesh->fv_iter(fh); curVertexFace.is_valid(); curVertexFace ++ )
-                {
-                    VertexHandle vh2 = *curVertexFace;
-
-                    for(int unsigned i=0; i<neigborsVisited.size(); i++)
-                    {
-                        if(vh2.idx() != neigborsVisited[i])
-                        {
-                           neigborsToVisit.push_back(vh2.idx());
-                           nRing[i] +=1;
-                           qDebug()<<"ses voisins"<<vh2.idx();
-                        }
-                    }
-                    //neighorsToVisit.pushback//..
-                }
-
-            }
-
-
-        }
-        neigborsVisited.push_back(cv.idx());
-
-
-        isInside = false;
-
-    }
-}
-
-void getValence(MyMesh* _mesh)
-{
-    /*valences : compter le nombre de sommets connectés par les arêtes de faces à 2, 3, 4, 5, ....  n voisins (histogramme).*/
-
-    std::vector<int> neigborsToVisit;
-    std::vector<int> neigborsVisited;
-    std::vector<int> nRing;
-
-    bool isInside = false;
-
-    //parcours tous les sommets du mesh
-    for(MyMesh::VertexIter curVertex = _mesh->vertices_begin(); curVertex != _mesh->vertices_end(); curVertex++)
-    {
-        //recherche si notre element a deja été visité
-        VertexHandle cv = *curVertex;
-        for(int unsigned i=0; i<neigborsVisited.size(); i++){
-            if(cv.idx() == neigborsVisited[i])
-                isInside = true;
-        }
-        qDebug()<<"sommet courant :"<<cv.idx();
-
-        if(!isInside)
-        {
-            //on ajoute le sommet sur lequel on est comme etant visité
-            neigborsVisited.push_back(cv.idx());
-
-            for(MyMesh::VertexFaceIter curFaceVertex = _mesh->vf_iter(cv); curFaceVertex.is_valid(); curFaceVertex++ )
-            {
-                FaceHandle fh = *curFaceVertex;
-                for(MyMesh::FaceVertexIter curVertexFace = _mesh->fv_iter(fh); curVertexFace.is_valid(); curVertexFace ++ )
-                {
-                    VertexHandle vh2 = *curVertexFace;
-
-                    for(int unsigned i=0; i<neigborsVisited.size(); i++)
-                    {
-                        if(vh2.idx() != neigborsVisited[i])
-                        {
-                           neigborsToVisit.push_back(vh2.idx());
-                           nRing[i] +=1;
-                           qDebug()<<"ses voisins"<<vh2.idx();
-                        }
-                    }
-                    //neighorsToVisit.pushback//..
-                }
-
-            }
-
-
-        }
-        neigborsVisited.push_back(cv.idx());
-
-
-        isInside = false;
-
-    }
-}
 
 /*
  *  permet d'initialiser les couleurs et les épaisseurs des élements du maillage
@@ -562,7 +500,7 @@ void MainWindow::on_pushButton_barycentre_clicked()
 
 }
 
-/*
+/**
  * THis function return the Barycentrique point of a face
  * It is used to compute normal face
 */
@@ -617,7 +555,7 @@ void MainWindow::on_getInformation_clicked()
 
 }
 
-/*
+/**
  * Fonction qui calcul et affiche les valeur limite du maillage chargé
  */
 void MainWindow::on_boundingBox_clicked()
@@ -666,7 +604,7 @@ void MainWindow::on_boundingBox_clicked()
     qDebug()<<"p7" << minCoordonnees[0] <<","<<maxCoordonnees[1] <<","<<maxCoordonnees[2];
     qDebug()<<"p8" << maxCoordonnees[0] <<","<<maxCoordonnees[1] <<","<<maxCoordonnees[2];
 
-    //======k===
+    //=========
 
         MyMesh mesh;
 
@@ -731,12 +669,6 @@ void MainWindow::on_boundingBox_clicked()
         // on affiche le maillage
         displayMesh(&mesh);
 
-
-        /*   delete_vertices() delete_faces()  delete_edges()*/
-        //delete_vertices();
-        //delete_faces();
-
-
 }
 
 void MainWindow::on_pushButton_area_clicked()
@@ -746,10 +678,15 @@ void MainWindow::on_pushButton_area_clicked()
     qDebug()<<"Surface de la plus grande face du mesh" <<get_max_area(&mesh);
 }
 
-
-
 void MainWindow::on_triangleSurface_proportion_clicked()
 {
+    /**
+     * @brief on_triangleSurface_proportion_clicked
+     * @param
+     * @return
+     * @details Répartition des surfaces moyennes des faces du mesh ex : 10 faces ont une surface
+     * comprise entre 0 et 10% de la surface total du mesh...
+     */
 
     float fullMesh_area = compute_area(&mesh);
     std::vector<float> areaRepartition(10);
@@ -768,7 +705,6 @@ void MainWindow::on_triangleSurface_proportion_clicked()
                 areaRepartition[i] = areaRepartition[i]+1;
         }
 
-
     }
 
     for(int i=0; i<10;i++)
@@ -779,69 +715,70 @@ void MainWindow::on_triangleSurface_proportion_clicked()
 
 }
 
-bool MainWindow::containIsolated_points()
+bool MainWindow::checkOnlyPoint() {
+    /**
+     * @brief checkOnlyPoint
+     * @param _mesh
+     * @return bool
+     * @details vérifier que les fichiers contiennent seulement des points 3D.
+     */
+
+    if (mesh.faces_empty() && !(mesh.vertices_empty()))
+        return true;
+    return false;
+}
+
+bool MainWindow::checkGlobalNeighbours(MyMesh *_mesh)
 {
-    bool hasIsolatePoint = false;
+    /**
+     * @brief checkGlobalNeighbours
+     * @param _mesh
+     * @return bool
+     * @details qu'il n'y a pas de faces sans voisines,
+     * de point n'appartenant pas à une arête,
+     * et qu'il n'y a pas d'arêtes n'appartenant pas à une face.
+     */
 
-    //to be complated
+    bool faces_without_neightbours;
+    bool point_belong_to_edge;
+    bool edge_belong_to_face;
 
-    return hasIsolatePoint;
+    // faces_without_neightbours
+    for (MyMesh::FaceIter f_it = _mesh->faces_sbegin(); f_it != _mesh->faces_end(); f_it++) {
+        faces_without_neightbours = true;
+        for (MyMesh::FaceFaceIter ff_it = _mesh->ff_iter(*f_it); ff_it.is_valid(); ff_it++) {
+            faces_without_neightbours = false;
+            break;
+        }
+        if (faces_without_neightbours)
+            return false;
+    }
+
+    // point_belong_to_edge
+    for (MyMesh::VertexIter v_it = _mesh->vertices_sbegin(); v_it != _mesh->vertices_end(); v_it++) {
+        point_belong_to_edge = false;
+        for (MyMesh::VertexEdgeIter ve_it = _mesh->ve_iter(*v_it); ve_it.is_valid(); ve_it++) {
+            point_belong_to_edge = true;
+            break;
+        }
+        if (!point_belong_to_edge)
+            return false;
+    }
+
+    return true;
 }
 
 void MainWindow::on_meshIsValid_clicked()
 {
-    bool a,b;
-
-    //a = containPoints(&mesh);
-    //b = containTriangles(&mesh);
-    //appel de au fonction précédent non fonctionnel
-
-    // partie a mettre dans fonction containPoints()
-    unsigned int numberNeighborsPoint;
-    bool hasSinglePoints = false;
-
-    for(MyMesh::VertexIter vit = mesh.vertices_begin(); vit != mesh.vertices_end(); vit ++)
-    {
-        VertexHandle vh = *vit;
-        numberNeighborsPoint=0;
-        for (MyMesh::VertexVertexIter curentVertex = mesh.vv_iter(vh); curentVertex.is_valid(); curentVertex ++)
-        {
-            numberNeighborsPoint ++;
-        }
-        if(numberNeighborsPoint==0)
-        {
-            hasSinglePoints = true;
-        }
-
+    qDebug() << "/****** " << __FUNCTION__ << " ******/";
+    if (!checkOnlyPoint()) {
+            qDebug() << "All faces are triangular [" << checkAllTriangularFace(&mesh) << "]";
+            qDebug() << "All faces/points/edges had a neightbors [" << checkGlobalNeighbours(&mesh) << "]";
+    }
+    else {
+        qDebug() << "Only points present in this mesh";
     }
 
-
-    //========== partie a mettre dans fonction containTriangle()==============
-
-    int counter = 0;
-    bool hasTriangle = false;
-
-    for (MyMesh::FaceIter fit = mesh.faces_begin(); fit != mesh.faces_end(); fit++)
-    {
-        counter = 0;
-        for(MyMesh::VertexIter vit = mesh.vertices_begin(); vit != mesh.vertices_end(); vit ++)
-        {
-            counter ++;
-        }
-        if(counter == 3)
-        {
-            hasTriangle = true;
-
-            break;
-        }
-    }
-
-    //==========================
-
-    if(hasTriangle && hasSinglePoints)
-        qDebug()<<"Mesh ayant des points isolé et également des faces triangulaire";
-    else
-        qDebug()<<"Maillage conforme";
 }
 
 
@@ -937,6 +874,25 @@ void MainWindow::on_getValanceRing_clicked()
     }
 }
 
+bool MainWindow::checkAllTriangularFace(MyMesh* _mesh) {
+    /**
+     * @brief checkAllTriangularFace
+     * @param _mesh
+     * @return bool
+     * @details vérifier que les fichiers contiennent des faces triangulaires.
+     */
+
+    for (MyMesh::FaceIter f_it = _mesh->faces_sbegin(); f_it != _mesh->faces_end(); f_it++) {
+        unsigned int counter_edge_for_one_face = 0;
+        for (MyMesh::FaceEdgeIter fe_it = _mesh->fe_iter(_mesh->face_handle(static_cast<unsigned int>(f_it->idx()))); fe_it.is_valid(); fe_it++) {
+            counter_edge_for_one_face++;
+        }
+        if (counter_edge_for_one_face != 3)
+            return false;
+    }
+    return true;
+}
+
 void MainWindow::on_show_pts_norm_clicked()
 {
     normals_points(&mesh);
@@ -945,4 +901,42 @@ void MainWindow::on_show_pts_norm_clicked()
 void MainWindow::on_pushButton_fv_angle_clicked()
 {
     angles_normal_points(&mesh);
+}
+
+void MainWindow::on_getDiedreAngle_clicked()
+{
+    //condition : que les face soit toutes triangulaires
+    QVector<VertexHandle> edge;
+    QList<int> vertexlist;
+
+    //on créer un liste de d'arret
+    for(MyMesh::VertexIter v_it = mesh.vertices_begin(); v_it != mesh.vertices_end(); v_it++)
+    {
+        VertexHandle vh1 = *v_it;
+        //edge.append(vh1);
+        for(MyMesh::VertexVertexIter curVertex = mesh.vv_iter(vh1); curVertex.is_valid(); curVertex ++)
+        {
+            VertexHandle vh2 = *curVertex;
+
+            vertexlist.append(vh1.idx());
+            vertexlist.append(vh2.idx());
+
+        }
+
+    }
+
+    //On regarde les face commune a ces arête et on applique traitement
+
+    for(MyMesh::FaceIter f_it = mesh.faces_begin(); f_it != mesh.faces_end(); f_it++)
+    {
+        FaceHandle f = *f_it;
+        for(MyMesh::FaceVertexIter curVertex = mesh.fv_iter(f); curVertex.is_valid(); curVertex ++)
+        {
+
+
+        }
+    }
+
+
+
 }
