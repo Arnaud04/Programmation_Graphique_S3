@@ -751,3 +751,36 @@ void MainWindow::on_pushButton_fv_angle_clicked()
 {
     angles_normal_points(&mesh);
 }
+
+void MainWindow::on_pushButton_ply_clicked()
+{
+    QString fileName = QFileDialog::getSaveFileName(this,
+            tr("Save file to ply"), "",
+            tr("PLY (*.ply)"));
+
+            qDebug()<<fileName;
+    if (true)
+    {
+        fileName+=".obj";
+         QFile file(fileName);
+         file.open(QIODevice::WriteOnly|QIODevice::Text);
+         QTextStream out(&file);
+         out.setCodec("UTF-8");
+         //out.setVersion(QDataStream::Qt_4_5);
+         out<<"g"<<endl;
+         for(MyMesh::VertexIter ve = mesh.vertices_begin(); ve != mesh.vertices_end();ve++)
+         {
+            out<<"v ";
+            out<<mesh.point(*ve)[0]<<" ";
+            out<<mesh.point(*ve)[1]<<" ";
+            out<<mesh.point(*ve)[2];
+            out<<endl;
+         }
+         if (!file.open(QIODevice::WriteOnly))
+         {
+            QMessageBox::information(this, tr("Unable to open file"),
+            file.errorString());
+            return;
+         }
+    }
+}

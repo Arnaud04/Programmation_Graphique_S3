@@ -5,7 +5,7 @@
 #include <QMainWindow>
 #include <OpenMesh/Core/IO/MeshIO.hh>
 #include <OpenMesh/Core/Mesh/TriMesh_ArrayKernelT.hh>
-
+#include <QMessageBox>
 namespace Ui {
 class MainWindow;
 }
@@ -75,6 +75,8 @@ private slots:
     void on_show_pts_norm_clicked();
 
     void on_pushButton_fv_angle_clicked();
+
+    void on_pushButton_ply_clicked();
 
 private:
 
